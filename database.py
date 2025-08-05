@@ -1,9 +1,9 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
 diff --git a//dev/null b/database.py
-index 0000000000000000000000000000000000000000..fd17f39215d906105abacb76bc5855c73dc63917 100644
+index 0000000000000000000000000000000000000000..d790b01c0c58d48c32868692c6f6523be4645bf2 100644
 --- a//dev/null
 +++ b/database.py
-@@ -0,0 +1,66 @@
+@@ -0,0 +1,58 @@
 +import sqlite3
 +from pathlib import Path
 +from typing import Iterable, Tuple
@@ -18,21 +18,18 @@ index 0000000000000000000000000000000000000000..fd17f39215d906105abacb76bc5855c7
 +
 +def initialize(db_path: Path = DEFAULT_DB_PATH) -> None:
 +    """Create the vehicles table if it does not already exist."""
-+    conn = get_connection(db_path)
-+    cur = conn.cursor()
-+    cur.execute(
-+        """
-+        CREATE TABLE IF NOT EXISTS vehicles (
-+            id INTEGER PRIMARY KEY AUTOINCREMENT,
-+            name TEXT NOT NULL,
-+            plate_number TEXT NOT NULL UNIQUE,
-+            registration_expiry DATE,
-+            insurance_expiry DATE
++    with get_connection(db_path) as conn:
++        conn.execute(
++            """
++            CREATE TABLE IF NOT EXISTS vehicles (
++                id INTEGER PRIMARY KEY AUTOINCREMENT,
++                name TEXT NOT NULL,
++                plate_number TEXT NOT NULL UNIQUE,
++                registration_expiry DATE,
++                insurance_expiry DATE
++            )
++            """
 +        )
-+        """
-+    )
-+    conn.commit()
-+    conn.close()
 +
 +
 +def add_vehicle(
@@ -43,28 +40,23 @@ index 0000000000000000000000000000000000000000..fd17f39215d906105abacb76bc5855c7
 +    db_path: Path = DEFAULT_DB_PATH,
 +) -> None:
 +    """Insert a new vehicle record into the database."""
-+    conn = get_connection(db_path)
-+    cur = conn.cursor()
-+    cur.execute(
-+        """
-+        INSERT INTO vehicles (name, plate_number, registration_expiry, insurance_expiry)
-+        VALUES (?, ?, ?, ?)
-+        """,
-+        (name, plate_number, registration_expiry, insurance_expiry),
-+    )
-+    conn.commit()
-+    conn.close()
++    with get_connection(db_path) as conn:
++        conn.execute(
++            """
++            INSERT INTO vehicles (name, plate_number, registration_expiry, insurance_expiry)
++            VALUES (?, ?, ?, ?)
++            """,
++            (name, plate_number, registration_expiry, insurance_expiry),
++        )
 +
 +
 +def get_all_vehicles(db_path: Path = DEFAULT_DB_PATH) -> Iterable[Tuple[str, str, str, str]]:
 +    """Return all vehicle records."""
-+    conn = get_connection(db_path)
-+    cur = conn.cursor()
-+    cur.execute(
-+        "SELECT name, plate_number, registration_expiry, insurance_expiry FROM vehicles"
-+    )
-+    rows = cur.fetchall()
-+    conn.close()
++    with get_connection(db_path) as conn:
++        cur = conn.execute(
++            "SELECT name, plate_number, registration_expiry, insurance_expiry FROM vehicles"
++        )
++        rows = cur.fetchall()
 +    return rows
 +
 +
