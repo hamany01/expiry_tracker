@@ -39,3 +39,20 @@ python -m cli add "اسم المركبة" "رقم اللوحة" "تاريخ ان
 ```bash
 python -m cli list
 ```
+
+## واجهة الويب
+لتجربة واجهة ويب مبسطة بإستخدام [Streamlit](https://streamlit.io/):
+
+1. تثبيت المتطلبات:
+
+```bash
+pip install -r requirements.txt
+```
+
+2. تشغيل التطبيق:
+
+```bash
+streamlit run app.py
+```
+
+سيتم إنشاء قاعدة البيانات تلقائيًا عند تشغيل التطبيق ويمكنك إضافة مركبات وعرضها عبر المتصفح.
