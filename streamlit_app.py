@@ -2,9 +2,10 @@ import streamlit as st
 import pandas as pd
 from database import initialize, add_vehicle, get_all_vehicles
 
-# --- تهيئة قاعدة البيانات ---
+# تهيئة قاعدة البيانات
 initialize()
 
+# عنوان التطبيق
 st.title("متابعة تواريخ انتهاء السيارات")
 
 # --- نموذج إضافة سيارة جديدة ---
