@@ -1,5 +1,6 @@
 streamlit
 pandas
 numpy
-sqlite3
+sqlalchemy
 openpyxl
+python-dotenv
