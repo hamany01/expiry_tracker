@@ -1,51 +1,40 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a//dev/null b/app.py
-index 0000000000000000000000000000000000000000..100c65b7171565a8f1eda94c8595b54c7f759249 100644
---- a//dev/null
-+++ b/app.py
-@@ -0,0 +1,42 @@
-+import streamlit as st
-+import database
-+
-+def main() -> None:
-+    """Streamlit interface for vehicle expiration tracking."""
-+    database.initialize()
-+
-+    st.title("Vehicle Expiration Tracker")
-+
-+    with st.form("add_vehicle"):
-+        name = st.text_input("Vehicle Name")
-+        plate = st.text_input("Plate Number")
-+        registration = st.date_input("Registration Expiry")
-+        insurance = st.date_input("Insurance Expiry")
-+        submitted = st.form_submit_button("Add Vehicle")
-+
-+        if submitted:
-+            database.add_vehicle(
-+                name,
-+                plate,
-+                registration.isoformat(),
-+                insurance.isoformat(),
-+            )
-+            st.success("Vehicle added")
-+
-+    st.header("Registered Vehicles")
-+    vehicles = database.get_all_vehicles()
-+    if vehicles:
-+        st.table(
-+            {
-+                "Name": [v[0] for v in vehicles],
-+                "Plate": [v[1] for v in vehicles],
-+                "Registration": [v[2] for v in vehicles],
-+                "Insurance": [v[3] for v in vehicles],
-+            }
-+        )
-+    else:
-+        st.info("No vehicles available")
-+
-+
-+if __name__ == "__main__":
-+    main()
- 
-EOF
-)
+import streamlit as st
+import pandas as pd
+from database import initialize, add_vehicle, get_all_vehicles
+
+# --- تهيئة قاعدة البيانات ---
+initialize()
+
+st.title("متابعة تواريخ انتهاء السيارات")
+
+# --- نموذج إضافة سيارة جديدة ---
+st.header("إضافة سيارة جديدة")
+with st.form("add_vehicle_form"):
+    name = st.text_input("اسم السيارة / المالك")
+    plate_number = st.text_input("رقم اللوحة")
+    registration_expiry = st.date_input("تاريخ انتهاء الاستمارة")
+    insurance_expiry = st.date_input("تاريخ انتهاء التأمين")
+    submitted = st.form_submit_button("إضافة")
+    if submitted:
+        if name and plate_number:
+            add_vehicle(
+                name,
+                plate_number,
+                str(registration_expiry),
+                str(insurance_expiry)
+            )
+            st.success("تمت إضافة السيارة بنجاح!")
+        else:
+            st.error("يجب إدخال اسم السيارة ورقم اللوحة على الأقل")
+
+# --- عرض جميع السيارات ---
+st.header("قائمة السيارات")
+vehicles = get_all_vehicles()
+if vehicles:
+    df = pd.DataFrame(
+        vehicles,
+        columns=["اسم السيارة", "رقم اللوحة", "انتهاء الاستمارة", "انتهاء التأمين"]
+    )
+    st.dataframe(df)
+else:
+    st.info("لا توجد بيانات سيارات حتى الآن.")
