@@ -1,15 +1,14 @@
 
 import pandas as pd
-import datetime
 import plotly.express as px
 
 VEHICLE_COLUMNS_AR = ["اسم السيارة", "رقم اللوحة", "انتهاء الاستمارة", "انتهاء التأمين"]
 
 
 def color_row(row):
-    today = pd.to_datetime("today").date()
-    reg = pd.to_datetime(row["انتهاء الاستمارة"]).date()
-    ins = pd.to_datetime(row["انتهاء التأمين"]).date()
+    today = pd.Timestamp.now().normalize()
+    reg = pd.to_datetime(row["انتهاء الاستمارة"])
+    ins = pd.to_datetime(row["انتهاء التأمين"])
     color = ""
     if reg < today or ins < today:
         color = "background-color: #ffcccc;"
@@ -33,12 +32,12 @@ def get_expiry_notifications(df):
     if df.empty:
         return []
 
-    today = datetime.date.today()
+    today = pd.Timestamp.now().normalize()
     notifications = []
 
     for _, row in df.iterrows():
-        reg_expiry = pd.to_datetime(row["انتهاء الاستمارة"]).date()
-        ins_expiry = pd.to_datetime(row["انتهاء التأمين"]).date()
+        reg_expiry = pd.to_datetime(row["انتهاء الاستمارة"])
+        ins_expiry = pd.to_datetime(row["انتهاء التأمين"])
 
         reg_days = (reg_expiry - today).days
         ins_days = (ins_expiry - today).days
@@ -100,14 +99,14 @@ def create_status_chart(df):
     if df.empty:
         return None
 
-    today = datetime.date.today()
+    today = pd.Timestamp.now().normalize()
     expired_count = 0
     near_expiry_count = 0
     valid_count = 0
 
     for _, row in df.iterrows():
-        reg_expiry = pd.to_datetime(row["انتهاء الاستمارة"]).date()
-        ins_expiry = pd.to_datetime(row["انتهاء التأمين"]).date()
+        reg_expiry = pd.to_datetime(row["انتهاء الاستمارة"])
+        ins_expiry = pd.to_datetime(row["انتهاء التأمين"])
 
         if reg_expiry < today or ins_expiry < today:
             expired_count += 1
@@ -143,11 +142,11 @@ def create_expiry_timeline(df):
         return None
 
     timeline_data = []
-    today = datetime.date.today()
+    today = pd.Timestamp.now().normalize()
 
     for _, row in df.iterrows():
-        reg_expiry = pd.to_datetime(row["انتهاء الاستمارة"]).date()
-        ins_expiry = pd.to_datetime(row["انتهاء التأمين"]).date()
+        reg_expiry = pd.to_datetime(row["انتهاء الاستمارة"])
+        ins_expiry = pd.to_datetime(row["انتهاء التأمين"])
 
         timeline_data.append({
             "السيارة": row['اسم السيارة'],
