@@ -5,6 +5,7 @@ import datetime
 from database import initialize, get_all_vehicles, add_vehicle, update_vehicle, delete_vehicle
 from utils import color_row, save_to_excel, VEHICLE_COLUMNS_AR
 
+
 st.set_page_config(page_title="لوحة متابعة السيارات", layout="wide")
 initialize()
 
