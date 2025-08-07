@@ -8,25 +8,39 @@ from utils import color_row, save_to_excel, VEHICLE_COLUMNS_AR
 st.set_page_config(page_title="لوحة متابعة السيارات", layout="wide")
 initialize()
 
+def get_cached_vehicle_data():
+    if "vehicle_data" not in st.session_state or st.session_state.get("data_needs_refresh", False):
+        raw_data = get_all_vehicles()
+        if raw_data:
+            df = pd.DataFrame(raw_data, columns=VEHICLE_COLUMNS_AR)
+            df["انتهاء الاستمارة"] = pd.to_datetime(df["انتهاء الاستمارة"]).dt.date
+            df["انتهاء التأمين"] = pd.to_datetime(df["انتهاء التأمين"]).dt.date
+            st.session_state.vehicle_data = df
+        else:
+            st.session_state.vehicle_data = pd.DataFrame(columns=VEHICLE_COLUMNS_AR)
+        st.session_state.data_needs_refresh = False
+    return st.session_state.vehicle_data
+
+def refresh_data():
+    st.session_state.data_needs_refresh = True
+
 st.sidebar.title("🚗 لوحة التحكم")
 page = st.sidebar.radio("اختر الصفحة", ["📊 لوحة التحكم", "📁 إدارة السيارات", "📤 تصدير البيانات"])
 
 if page == "📊 لوحة التحكم":
     st.title("📊 لوحة تحكم السيارات")
-    df = pd.DataFrame(get_all_vehicles(), columns=VEHICLE_COLUMNS_AR)
+    df = get_cached_vehicle_data()
 
     if df.empty:
         st.info("لا توجد بيانات لعرضها.")
     else:
         today = datetime.date.today()
-        df["انتهاء الاستمارة"] = pd.to_datetime(df["انتهاء الاستمارة"]).dt.date
-        df["انتهاء التأمين"] = pd.to_datetime(df["انتهاء التأمين"]).dt.date
-
+        
         expired = df[(df["انتهاء الاستمارة"] < today) | (df["انتهاء التأمين"] < today)]
-        near_expiry = df[
-            ((df["انتهاء الاستمارة"] - today).dt.days <= 30)
-            | ((df["انتهاء التأمين"] - today).dt.days <= 30)
-        ]
+        
+        reg_near_expiry = (pd.to_datetime(df["انتهاء الاستمارة"]) - pd.to_datetime(today)).dt.days <= 30
+        ins_near_expiry = (pd.to_datetime(df["انتهاء التأمين"]) - pd.to_datetime(today)).dt.days <= 30
+        near_expiry = df[reg_near_expiry | ins_near_expiry]
 
         st.metric("إجمالي السيارات", len(df))
         st.metric("منتهية", len(expired))
@@ -37,7 +51,7 @@ if page == "📊 لوحة التحكم":
 
 elif page == "📁 إدارة السيارات":
     st.title("📁 إدارة السيارات")
-    df = pd.DataFrame(get_all_vehicles(), columns=VEHICLE_COLUMNS_AR)
+    df = get_cached_vehicle_data()
     with st.expander("➕ إضافة سيارة جديدة"):
         with st.form("add_form", clear_on_submit=True):
             name = st.text_input("اسم السيارة")
@@ -47,6 +61,7 @@ elif page == "📁 إدارة السيارات":
             submitted = st.form_submit_button("إضافة")
             if submitted:
                 add_vehicle(name, plate, str(reg), str(ins))
+                refresh_data()
                 st.success("✅ تم إضافة السيارة بنجاح.")
                 st.rerun()
 
@@ -63,11 +78,13 @@ elif page == "📁 إدارة السيارات":
             updated = st.form_submit_button("💾 تحديث")
             if updated:
                 update_vehicle(new_name, selected, str(new_reg), str(new_ins))
+                refresh_data()
                 st.success("✅ تم التحديث.")
                 st.rerun()
 
         if st.button("🗑️ حذف السيارة"):
             delete_vehicle(selected)
+            refresh_data()
             st.success("🚮 تم الحذف.")
             st.rerun()
 
@@ -76,7 +93,7 @@ elif page == "📁 إدارة السيارات":
 
 elif page == "📤 تصدير البيانات":
     st.title("📤 تصدير البيانات إلى Excel")
-    df = pd.DataFrame(get_all_vehicles(), columns=VEHICLE_COLUMNS_AR)
+    df = get_cached_vehicle_data()
     if df.empty:
         st.warning("⚠️ لا توجد بيانات.")
     else:
