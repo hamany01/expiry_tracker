@@ -10,6 +10,7 @@ from utils import (color_row, save_to_excel, VEHICLE_COLUMNS_AR,
                    create_expiry_timeline)
 
 
+
 st.set_page_config(page_title="لوحة متابعة السيارات", layout="wide")
 initialize()
 
