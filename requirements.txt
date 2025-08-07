@@ -1,6 +1,0 @@
-streamlit
-pandas
-numpy
-sqlalchemy
-openpyxl
-python-dotenv
